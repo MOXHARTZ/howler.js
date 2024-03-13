@@ -6,11 +6,12 @@ var start = document.getElementById('start');
 
 // Setup the sounds to be used.
 var sound = new Howl({
-  src: ['audio/sound1.webm', 'audio/sound1.mp3']
+  src: ['audio/sound1.webm', 'audio/sound1.mp3'],
+  // pos: [0, 0, 0]
 });
 
 // Enable the start button when the sounds have loaded.
-sound.once('load', function() {
+sound.once('load', function () {
   start.removeAttribute('disabled');
   start.innerHTML = 'BEGIN FILTER TESTS';
 });
@@ -18,41 +19,42 @@ sound.once('load', function() {
 // Define the tests to run.
 var id;
 var tests = [
-  function(fn) {
-    sound.once('play', function() {
+  function (fn) {
+    sound.once('play', function () {
       sound.volume(1.0);
       label.innerHTML = 'PLAYING';
       setTimeout(fn, 2000);
     });
-    
+
     id = sound.play();
   },
 
-  function(fn) {
-    
+  function (fn) {
+
+
     sound.addFilter({
-        filterType: "lowpass",
-        frequency: 250.0,
-        Q: 3.0
+      filterType: "lowpass",
+      frequency: 250.0,
+      Q: 3.0
     })
     label.innerHTML = 'LOWPASS';
     setTimeout(fn, 3000);
   },
 
-  function(fn) {
+  function (fn) {
     sound.filterType('highpass');
     sound.frequency(10000);
     setTimeout(fn, 3000);
     label.innerHTML = 'HIPASS';
   },
-  function(fn) {
+  function (fn) {
     sound.filterType('bandpass');
     sound.frequency(1000);
     sound.qFactor(7.0);
     setTimeout(fn, 3000);
     label.innerHTML = 'BANDPASS';
   },
-  function(fn) {
+  function (fn) {
     sound.filterType('notch');
     sound.frequency(5000);
     sound.qFactor(0.2);
@@ -63,8 +65,8 @@ var tests = [
 ];
 
 // Create a method that will call the next in the series.
-var chain = function(i) {
-  return function() {
+var chain = function (i) {
+  return function () {
     if (tests[i]) {
       tests[i](chain(++i));
     } else {
@@ -72,7 +74,7 @@ var chain = function(i) {
       label.style.color = '#74b074';
 
       // Wait for 5 seconds and then go back to the tests index.
-      setTimeout(function() {
+      setTimeout(function () {
         window.location = './';
       }, 5000);
     }
@@ -82,7 +84,7 @@ var chain = function(i) {
 // If Web Audio isn't available, send them to hTML5 test.
 if (Howler.usingWebAudio) {
   // Listen to a click on the button to being the tests.
-  start.addEventListener('click', function() {
+  start.addEventListener('click', function () {
     tests[0](chain(1));
     start.style.display = 'none';
   }, false);

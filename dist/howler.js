@@ -2139,18 +2139,24 @@
       sound._node.bufferSource = Howler.ctx.createBufferSource();
       sound._node.bufferSource.buffer = cache[self._src];
 
-      // Connect to the correct node.
+      // hack to work :(
+      const filter = Howler.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 22000
+      filter.Q.value = -1.0
+      filter.gain.value = -1.0
+
+      // Connect the buffer source to the filter
+      sound._node.bufferSource.connect(sound._filterNode || filter);
 
       if (sound._panner) {
-        console.log('connecting to panner');
-        sound._node.bufferSource.connect(sound._panner);
-        sound._panner.connect(sound._fxInsertIn);
+        filter.connect(sound._fxInsertIn);
+        sound._fxInsertIn.connect(sound._panner);
       } else {
-        console.log('connecting to fxInsertIn');
-        sound._node.bufferSource.connect(sound._fxInsertIn)
+        filter.connect(sound._node);
       }
 
-      // sound._node.bufferSource.connect(sound._fxSend);
+      sound._node.bufferSource.connect(sound._fxSend);
 
       // Setup looping and playback rate.
       sound._node.bufferSource.loop = sound._loop;
