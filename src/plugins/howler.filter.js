@@ -245,6 +245,8 @@
   Howl.prototype.addFilter = function (filterParams, id) {
     var self = this;
 
+    console.log('add filter')
+
     // Stop right here if not using Web Audio.
     if (!self._webAudio) {
       return self;

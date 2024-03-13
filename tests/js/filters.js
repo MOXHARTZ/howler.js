@@ -7,7 +7,7 @@ var start = document.getElementById('start');
 // Setup the sounds to be used.
 var sound = new Howl({
   src: ['audio/sound1.webm', 'audio/sound1.mp3'],
-  // pos: [0, 0, 0]
+  pos: [2, 0, 0]
 });
 
 // Enable the start button when the sounds have loaded.

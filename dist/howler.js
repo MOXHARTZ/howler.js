@@ -2139,12 +2139,11 @@
       sound._node.bufferSource = Howler.ctx.createBufferSource();
       sound._node.bufferSource.buffer = cache[self._src];
 
-      // hack to work :(
+      console.log('refreshing buffer');
 
       if (sound._panner) {
         if (sound._filterNode) {
           sound._node.bufferSource.connect(sound._filterNode);
-          sound._filterNode.connect(sound._fxInsertIn);
           sound._fxInsertIn.connect(sound._panner);
         } else {
           sound._node.bufferSource.connect(sound._panner);
@@ -2152,7 +2151,6 @@
       } else {
         if (sound._filterNode) {
           sound._node.bufferSource.connect(sound._filterNode);
-          sound._filterNode.connect(sound._node);
         } else {
           sound._node.bufferSource.connect(sound._node);
         }
