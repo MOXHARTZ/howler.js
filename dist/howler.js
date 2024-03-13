@@ -2139,8 +2139,18 @@
       sound._node.bufferSource = Howler.ctx.createBufferSource();
       sound._node.bufferSource.buffer = cache[self._src];
 
-      sound._node.bufferSource.connect(sound._fxInsertIn);
-      sound._node.bufferSource.connect(sound._fxSend);
+      // Connect to the correct node.
+
+      if (sound._panner) {
+        console.log('connecting to panner');
+        sound._node.bufferSource.connect(sound._panner);
+        sound._panner.connect(sound._fxInsertIn);
+      } else {
+        console.log('connecting to fxInsertIn');
+        sound._node.bufferSource.connect(sound._fxInsertIn)
+      }
+
+      // sound._node.bufferSource.connect(sound._fxSend);
 
       // Setup looping and playback rate.
       sound._node.bufferSource.loop = sound._loop;
@@ -2604,7 +2614,7 @@
  *  MIT License
  */
 
-(function() {
+(function () {
 
   'use strict';
 
@@ -2621,7 +2631,8 @@
    * @param  {Number} pan A value of -1.0 is all the way left and 1.0 is all the way right.
    * @return {Howler/Number}     Self or current stereo panning value.
    */
-  HowlerGlobal.prototype.stereo = function(pan) {
+  HowlerGlobal.prototype.stereo = function (pan) {
+    console.log('stereo setter')
     var self = this;
 
     // Stop right here if not using Web Audio.
@@ -2630,7 +2641,7 @@
     }
 
     // Loop through all Howls and update their stereo panning.
-    for (var i=self._howls.length-1; i>=0; i--) {
+    for (var i = self._howls.length - 1; i >= 0; i--) {
       self._howls[i].stereo(pan);
     }
 
@@ -2645,7 +2656,8 @@
    * @param  {Number} z The z-position of the listener.
    * @return {Howler/Array}   Self or current listener position.
    */
-  HowlerGlobal.prototype.pos = function(x, y, z) {
+  HowlerGlobal.prototype.pos = function (x, y, z) {
+    console.log('pos setter')
     var self = this;
 
     // Stop right here if not using Web Audio.
@@ -2688,7 +2700,7 @@
    * @param  {Number} zUp The z-orientation of the top of the listener.
    * @return {Howler/Array}     Returns self or the current orientation vectors.
    */
-  HowlerGlobal.prototype.orientation = function(x, y, z, xUp, yUp, zUp) {
+  HowlerGlobal.prototype.orientation = function (x, y, z, xUp, yUp, zUp) {
     var self = this;
 
     // Stop right here if not using Web Audio.
@@ -2732,8 +2744,8 @@
    * @param  {Function} _super Core init method.
    * @return {Howl}
    */
-  Howl.prototype.init = (function(_super) {
-    return function(o) {
+  Howl.prototype.init = (function (_super) {
+    return function (o) {
       var self = this;
 
       // Setup user-defined default properties.
@@ -2752,9 +2764,9 @@
       };
 
       // Setup event listeners.
-      self._onstereo = o.onstereo ? [{fn: o.onstereo}] : [];
-      self._onpos = o.onpos ? [{fn: o.onpos}] : [];
-      self._onorientation = o.onorientation ? [{fn: o.onorientation}] : [];
+      self._onstereo = o.onstereo ? [{ fn: o.onstereo }] : [];
+      self._onpos = o.onpos ? [{ fn: o.onpos }] : [];
+      self._onorientation = o.onorientation ? [{ fn: o.onorientation }] : [];
 
       // Complete initilization with howler.js core's init function.
       return _super.call(this, o);
@@ -2767,11 +2779,13 @@
    * @param  {Number} id (optional) The sound ID. If none is passed, all in group will be updated.
    * @return {Howl/Number}    Returns self or the current stereo panning value.
    */
-  Howl.prototype.stereo = function(pan, id) {
+  Howl.prototype.stereo = function (pan, id) {
+    console.log('stereo setter')
     var self = this;
 
     // Stop right here if not using Web Audio.
     if (!self._webAudio) {
+      console.log('stereo setter not web audio')
       return self;
     }
 
@@ -2779,7 +2793,7 @@
     if (self._state !== 'loaded') {
       self._queue.push({
         event: 'stereo',
-        action: function() {
+        action: function () {
           self.stereo(pan, id);
         }
       });
@@ -2803,7 +2817,7 @@
 
     // Change the streo panning of one or all sounds in group.
     var ids = self._getSoundIds(id);
-    for (var i=0; i<ids.length; i++) {
+    for (var i = 0; i < ids.length; i++) {
       // Get the sound.
       var sound = self._soundById(ids[i]);
 
@@ -2821,21 +2835,27 @@
               setupPanner(sound, pannerType);
             }
 
+            console.log('stereo setter', sound._panner)
             if (pannerType === 'spatial') {
               if (typeof sound._panner.positionX !== 'undefined') {
                 sound._panner.positionX.setValueAtTime(pan, Howler.ctx.currentTime);
                 sound._panner.positionY.setValueAtTime(0, Howler.ctx.currentTime);
                 sound._panner.positionZ.setValueAtTime(0, Howler.ctx.currentTime);
+                console.log('dfgkfsdjgdfjghdgjhdfsgjkdfs')
               } else {
                 sound._panner.setPosition(pan, 0, 0);
               }
             } else {
+              console.log('stereo setter', sound._panner.pan)
               sound._panner.pan.setValueAtTime(pan, Howler.ctx.currentTime);
             }
           }
 
+          console.log('finishhhhh')
+
           self._emit('stereo', sound._id);
         } else {
+          console.log('stereo getter')
           return sound._stereo;
         }
       }
@@ -2852,7 +2872,7 @@
    * @param  {Number} id (optional) The sound ID. If none is passed, all in group will be updated.
    * @return {Howl/Array}    Returns self or the current 3D spatial position: [x, y, z].
    */
-  Howl.prototype.pos = function(x, y, z, id) {
+  Howl.prototype.pos = function (x, y, z, id) {
     var self = this;
 
     // Stop right here if not using Web Audio.
@@ -2864,7 +2884,7 @@
     if (self._state !== 'loaded') {
       self._queue.push({
         event: 'pos',
-        action: function() {
+        action: function () {
           self.pos(x, y, z, id);
         }
       });
@@ -2888,7 +2908,7 @@
 
     // Change the spatial position of one or all sounds in group.
     var ids = self._getSoundIds(id);
-    for (var i=0; i<ids.length; i++) {
+    for (var i = 0; i < ids.length; i++) {
       // Get the sound.
       var sound = self._soundById(ids[i]);
 
@@ -2931,7 +2951,7 @@
    * @param  {Number} id (optional) The sound ID. If none is passed, all in group will be updated.
    * @return {Howl/Array}    Returns self or the current 3D spatial orientation: [x, y, z].
    */
-  Howl.prototype.orientation = function(x, y, z, id) {
+  Howl.prototype.orientation = function (x, y, z, id) {
     var self = this;
 
     // Stop right here if not using Web Audio.
@@ -2943,7 +2963,7 @@
     if (self._state !== 'loaded') {
       self._queue.push({
         event: 'orientation',
-        action: function() {
+        action: function () {
           self.orientation(x, y, z, id);
         }
       });
@@ -2967,7 +2987,7 @@
 
     // Change the spatial orientation of one or all sounds in group.
     var ids = self._getSoundIds(id);
-    for (var i=0; i<ids.length; i++) {
+    for (var i = 0; i < ids.length; i++) {
       // Get the sound.
       var sound = self._soundById(ids[i]);
 
@@ -3035,7 +3055,7 @@
    *
    * @return {Howl/Object} Returns self or current panner attributes.
    */
-  Howl.prototype.pannerAttr = function() {
+  Howl.prototype.pannerAttr = function () {
     var self = this;
     var args = arguments;
     var o, id, sound;
@@ -3091,7 +3111,7 @@
 
     // Update the values of the specified sounds.
     var ids = self._getSoundIds(id);
-    for (var i=0; i<ids.length; i++) {
+    for (var i = 0; i < ids.length; i++) {
       sound = self._soundById(ids[i]);
 
       if (sound) {
@@ -3144,8 +3164,8 @@
    * @param  {Function} _super Core Sound init method.
    * @return {Sound}
    */
-  Sound.prototype.init = (function(_super) {
-    return function() {
+  Sound.prototype.init = (function (_super) {
+    return function () {
       var self = this;
       var parent = self._parent;
 
@@ -3172,8 +3192,8 @@
    * @param  {Function} _super Sound reset method.
    * @return {Sound}
    */
-  Sound.prototype.reset = (function(_super) {
-    return function() {
+  Sound.prototype.reset = (function (_super) {
+    return function () {
       var self = this;
       var parent = self._parent;
 
@@ -3208,7 +3228,7 @@
    * @param  {Sound} sound Specific sound to setup panning on.
    * @param {String} type Type of panner to create: 'stereo' or 'spatial'.
    */
-  var setupPanner = function(sound, type) {
+  var setupPanner = function (sound, type) {
     type = type || 'spatial';
 
     // Create the new panner node.
